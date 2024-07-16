@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 
 	protobundle "github.com/sigstore/protobuf-specs/gen/pb-go/bundle/v1"
@@ -19,6 +20,7 @@ import (
 var version string
 var bundlePath string
 var pretty bool
+var inplace bool
 
 func init() {
 	flag.Usage = func() {
@@ -27,6 +29,7 @@ func init() {
 	}
 	flag.BoolVar(&pretty, "pretty", false, "Pretty print the output")
 	flag.StringVar(&version, "version", "0.3", "Bundle version to upgrade to")
+	flag.BoolVar(&inplace, "in-place", false, "Update the bundle in place (otherwise print to stdout)")
 	flag.Parse()
 	if flag.NArg() != 1 {
 		flag.Usage()
@@ -83,7 +86,21 @@ func runConvert() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s\n", outBytes)
+	outBytes = append(outBytes, []byte("\n")...)
+	var f io.WriteCloser
+	if inplace {
+		f, err = os.OpenFile(bundlePath, os.O_WRONLY|os.O_TRUNC, 0644)
+		if err != nil {
+			return err
+		}
+	} else {
+		f = os.Stdout
+	}
+	defer f.Close()
+	_, err = f.Write(outBytes)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

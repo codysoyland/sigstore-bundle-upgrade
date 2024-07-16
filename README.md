@@ -9,6 +9,8 @@ $ go build
 
 $ ./sigstore-bundle-upgrade -h
 Usage: sigstore-bundle-upgrade <path/to/sigstore/bundle>
+  -in-place
+        Update the bundle in place (otherwise print to stdout)
   -pretty
         Pretty print the output
   -version string
